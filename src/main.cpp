@@ -117,6 +117,14 @@ int main(int argc, char** argv) {
                       << ' ' << horizon::section_permissions(section.characteristics) << '\n';
         }
 
+        std::cout << "\nData directories:\n";
+        for (std::size_t i = 0; i < layout.data_directories.size(); ++i) {
+            const auto& directory = layout.data_directories[i];
+            std::cout << "  [" << std::dec << i << "] RVA=0x"
+                      << std::hex << std::uppercase << directory.rva
+                      << " Size=0x" << directory.size << std::dec << '\n';
+        }
+
         const horizon::PeImportResult imports = horizon::list_import_dlls(image, layout);
         std::cout << "\nImported DLLs:\n";
         if (!imports.ok) {
