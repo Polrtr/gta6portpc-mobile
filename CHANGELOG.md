@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-22 — PE layout parser (v0.3.0)
+
+- Added `horizon/pe_layout.hpp`: optional-header fields, data directories, section table, bounds-checked RVA→file-offset translation and imported DLL names.
+- Added `horizon-inspect --layout` (reads up to 256 MiB; read-only).
+- Added `horizon-layout-tests` (14 synthetic tests, including malformed-input cases).
+- CI now also runs on pushes to `claude/**` branches.
+- No existing code was removed. This is metadata parsing only: nothing is mapped, relocated or executed.
+
 ## 2026-11-22 — HORIZON bootstrap
 
 - Reframed the repository from a Leonida documentation workbench into the independent Project HORIZON prototype.

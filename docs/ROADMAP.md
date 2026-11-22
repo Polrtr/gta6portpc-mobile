@@ -12,8 +12,8 @@ This roadmap describes our own implementation. Percentages are not used: a miles
 
 ## Phase 1 — Format recognition
 
-- [ ] Expand PE metadata coverage using the official PE/COFF specification.
-- [ ] Add robust malformed-input and boundary tests.
+- [x] Expand PE metadata coverage using the official PE/COFF specification (optional-header fields, data directories, sections, import DLL names; further directories such as exports, relocations and TLS remain open).
+- [ ] Add robust malformed-input and boundary tests (started for the layout parser; the base inspector still needs more cases, and fuzzing is not yet done).
 - [ ] Document which public package metadata formats can be identified without unpacking protected content.
 - [ ] Keep unknown or protected package data opaque; no decryption or access-control bypass.
 

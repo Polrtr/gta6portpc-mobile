@@ -38,6 +38,7 @@ Requests should be translated at explicit, documented boundaries. The host imple
 | Component | Responsibility | Status |
 |---|---|---|
 | PE inspector | Read standard PE header metadata without execution | Implemented |
+| PE layout | Read optional-header fields, data directories, section table, RVA→file-offset translation and imported DLL names, read-only | Implemented (metadata only; no mapping or relocation) |
 | Call bridge | Route HORIZON-defined service requests to registered handlers | Implemented as a generic in-process dispatcher |
 | Input manifest | Validate the exact local file set required for a selected title | Not implemented |
 | Launcher/builder | Validate inputs and start a configured runtime | Not implemented |
@@ -46,6 +47,12 @@ Requests should be translated at explicit, documented boundaries. The host imple
 | Runtime services | Provide host equivalents for documented service contracts | Not implemented |
 | Graphics adapter | Translate target graphics semantics to a host backend | Not implemented |
 | Audio/input/storage/network | Implement individually documented host service adapters | Not implemented |
+
+## PE layout contract
+
+`read_pe_layout` builds on `inspect_pe` and adds image base, entry-point RVA, alignments, data directories and the section table. `rva_to_file_offset` translates an RVA range only when every byte is backed by header or section raw data in the supplied buffer; it never maps, zero-fills or relocates anything. `list_import_dlls` returns DLL names only (no function names or thunks), bounded to 4096 descriptors and 256-byte names, and fails closed on any out-of-range pointer, missing terminator or non-printable name.
+
+This module is a prerequisite for a future loader and for the Phase 2 interface inventory, but it is not a loader: nothing is mapped or executed. Imported DLL names are metadata and say nothing about whether the corresponding interfaces are implemented by HORIZON.
 
 ## Call bridge contract
 

@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - horizon/**
+      - claude/**
   pull_request:
 
 permissions:
