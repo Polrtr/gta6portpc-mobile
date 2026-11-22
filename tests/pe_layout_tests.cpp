@@ -276,6 +276,48 @@ bool test_overlap_and_truncation_warnings() {
         check(truncated.ok && truncated.layout.warnings.size() == 1U, "missing raw data is reported as a warning");
 }
 
+bool test_ambiguous_virtual_rva_is_rejected() {
+    auto bytes = make_pe();
+    // Move .idata so its virtual range overlaps .text.
+    write_u32(bytes, sections_offset() + 40U + 12U, 0x1100U);
+    const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
+    if (!check(result.ok, "overlapping sections remain inspectable")) {
+        return false;
+    }
+    return check(!horizon::rva_to_file_offset(result.layout, 0x1110U, 4U, bytes.size()),
+                 "ambiguous RVA must not resolve by section-table order");
+}
+
+bool test_overlapping_raw_sections_are_reported() {
+    auto bytes = make_pe();
+    write_u32(bytes, sections_offset() + 40U + 20U, 0x480U);
+    const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
+    if (!check(result.ok, "raw-overlap image remains inspectable")) {
+        return false;
+    }
+    for (const std::string& warning : result.layout.warnings) {
+        if (warning.find("overlaps the raw file range") != std::string::npos) {
+            return true;
+        }
+    }
+    return check(false, "overlapping raw section ranges must be reported");
+}
+
+bool test_raw_section_overlapping_headers_is_reported() {
+    auto bytes = make_pe();
+    write_u32(bytes, sections_offset() + 20U, 0x200U);
+    const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
+    if (!check(result.ok, "header-overlap image remains inspectable")) {
+        return false;
+    }
+    for (const std::string& warning : result.layout.warnings) {
+        if (warning.find("overlaps the declared PE headers") != std::string::npos) {
+            return true;
+        }
+    }
+    return check(false, "raw section overlapping SizeOfHeaders must be reported");
+}
+
 bool test_section_name_is_sanitised() {
     auto bytes = make_pe();
     bytes[sections_offset()] = 0x01U;
@@ -308,6 +350,9 @@ int main() {
         {"non-printable DLL name", test_import_name_non_printable},
         {"import table without terminator", test_import_table_without_terminator},
         {"overlap and truncation warnings", test_overlap_and_truncation_warnings},
+        {"ambiguous virtual RVA is rejected", test_ambiguous_virtual_rva_is_rejected},
+        {"overlapping raw sections are reported", test_overlapping_raw_sections_are_reported},
+        {"raw section/header overlap is reported", test_raw_section_overlapping_headers_is_reported},
         {"section name sanitising", test_section_name_is_sanitised},
     };
 
