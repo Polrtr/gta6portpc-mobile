@@ -165,6 +165,12 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
             layout.warnings.push_back(
                 "Section '" + section.name + "' raw data extends beyond the supplied bytes.");
         }
+        const std::uint64_t virtual_end =
+            static_cast<std::uint64_t>(section.virtual_address) + section.virtual_size;
+        if (section.virtual_size != 0U && virtual_end > 0x1'0000'0000ULL) {
+            layout.warnings.push_back(
+                "Section '" + section.name + "' virtual range exceeds the 32-bit RVA address space.");
+        }
         layout.sections.push_back(std::move(section));
     }
 
@@ -206,6 +212,46 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
         }
     }
 
+    // Detect raw file-range aliasing and section data that overlaps headers.
+    struct RawRange {
+        std::uint64_t begin;
+        std::uint64_t end;
+        const PeSection* section;
+    };
+    std::vector<RawRange> raw_ranges;
+    raw_ranges.reserve(layout.sections.size());
+    for (const PeSection& section : layout.sections) {
+        if (section.raw_size == 0U) {
+            continue;
+        }
+        const std::uint64_t begin = section.raw_offset;
+        const std::uint64_t end = begin + section.raw_size;
+        if (begin < layout.size_of_headers && end > 0U) {
+            layout.warnings.push_back(
+                "Section '" + section.name + "' raw data overlaps the declared PE headers.");
+        }
+        raw_ranges.push_back({begin, end, &section});
+    }
+    std::sort(raw_ranges.begin(), raw_ranges.end(),
+        [](const RawRange& left, const RawRange& right) {
+            if (left.begin != right.begin) {
+                return left.begin < right.begin;
+            }
+            return left.end < right.end;
+        });
+
+    const RawRange* furthest_raw = nullptr;
+    for (const RawRange& current : raw_ranges) {
+        if (furthest_raw != nullptr && current.begin < furthest_raw->end) {
+            layout.warnings.push_back(
+                "Section '" + current.section->name + "' overlaps the raw file range of section '" +
+                furthest_raw->section->name + "'.");
+        }
+        if (furthest_raw == nullptr || current.end > furthest_raw->end) {
+            furthest_raw = &current;
+        }
+    }
+
     PeLayoutResult result;
     result.ok = true;
     result.layout = std::move(layout);
@@ -225,31 +271,44 @@ std::optional<std::size_t> rva_to_file_offset(
     }
     const std::uint64_t rva_end = static_cast<std::uint64_t>(rva) + range_length;
 
+    // Resolve all matches instead of returning the first. Overlapping
+    // sections can make an RVA ambiguous, so fail closed in that case.
+    std::optional<std::size_t> resolved_offset;
+    const auto record_candidate = [&](std::uint64_t offset) -> bool {
+        if (offset > std::numeric_limits<std::size_t>::max() ||
+            offset > file_size ||
+            length > file_size - static_cast<std::size_t>(offset) ||
+            resolved_offset.has_value()) {
+            return false;
+        }
+        resolved_offset = static_cast<std::size_t>(offset);
+        return true;
+    };
+
     // Header region: mapped 1:1 from the start of the file.
-    if (rva_end <= layout.size_of_headers && rva_end <= file_size) {
-        return static_cast<std::size_t>(rva);
+    if (rva_end <= layout.size_of_headers &&
+        !record_candidate(static_cast<std::uint64_t>(rva))) {
+        return std::nullopt;
     }
 
     for (const PeSection& section : layout.sections) {
-        // Only bytes that physically exist in the file can be translated.
+        // Only bytes physically stored on disk can be translated.
         const std::uint32_t backed = section.virtual_size == 0U
             ? section.raw_size
             : std::min(section.virtual_size, section.raw_size);
         const std::uint64_t start = section.virtual_address;
         const std::uint64_t end = start + backed;
-        if (rva < start || rva_end > end) {
+        if (backed == 0U || rva < start || rva_end > end) {
             continue;
         }
 
-        const std::uint64_t file_end = static_cast<std::uint64_t>(section.raw_offset) +
-            (rva - section.virtual_address) + length;
-        if (file_end > file_size) {
+        const std::uint64_t offset = static_cast<std::uint64_t>(section.raw_offset) +
+            (static_cast<std::uint64_t>(rva) - start);
+        if (!record_candidate(offset)) {
             return std::nullopt;
         }
-        return static_cast<std::size_t>(
-            static_cast<std::uint64_t>(section.raw_offset) + (rva - section.virtual_address));
     }
-    return std::nullopt;
+    return resolved_offset;
 }
 
 PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLayout& layout) {
