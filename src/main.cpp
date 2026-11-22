@@ -120,8 +120,9 @@ int main(int argc, char** argv) {
         std::cout << "\nData directories:\n";
         for (std::size_t i = 0; i < layout.data_directories.size(); ++i) {
             const auto& directory = layout.data_directories[i];
-            std::cout << "  [" << std::dec << i << "] RVA=0x"
-                      << std::hex << std::uppercase << directory.rva
+            std::cout << "  [" << std::dec << i << "] "
+                      << (i == horizon::kDirectorySecurity ? "FileOffset=0x" : "RVA=0x")
+                      << std::hex << std::uppercase << directory.address_or_offset
                       << " Size=0x" << directory.size << std::dec << '\n';
         }
 
