@@ -1,7 +1,7 @@
 # Leonida / GTA6 PC Port — Progress
 
 **Last updated:** 2026-11-22  
-**Status:** Experimental runtime build and smoke tests completed; real game launch is not verified.
+**Status:** Full configured Release build completed; all 28 enabled CTest tests pass. Real game launch is not verified.
 
 ## Verified progress
 
@@ -53,3 +53,19 @@ The XVD metadata values observed in an initial exploratory read have not yet bee
 **GTA VI has not been launched.** The current success is limited to compiling Leonida and running a trivial test executable through its loader. The real game's executable has not been located or loaded, and graphics/gameplay compatibility remains untested.
 
 No game binaries, proprietary resource archives, or decrypted game content are included in this repository update.
+
+
+## Full test suite — 2026-11-22
+
+- Built the full configured Release solution successfully with:
+  `cmake --build build --config Release --parallel 4`.
+- This generated the runtime, test executables, and test fixtures, including `tiny_game.exe`.
+- Ran the complete CTest suite with:
+  `ctest --test-dir build -C Release --output-on-failure`.
+- **Result: 100% tests passed — 28 of 28 enabled tests passed.**
+- Total CTest time: 42.89 seconds.
+- The `gameinput` test (test 22 of 29) is disabled in this configuration and was not run; it is not a failure.
+- The passing tests cover the configured loader/PE loader, TLS, runtime types, unimplemented-import policy, memory shims, D3D12-related structures/proxies, Bink audio/decode, FSR dispatch, BVH, Xbox Game Runtime, tiny-game execution, and command-line validation tests.
+
+This is strong evidence that the currently enabled Leonida unit/integration tests pass on this Windows build. It still does **not** demonstrate that GTA VI itself launches or is compatible.
+
