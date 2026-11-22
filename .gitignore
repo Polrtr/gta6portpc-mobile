@@ -19,17 +19,20 @@ Makefile
 *.dll
 *.exe
 
-# Local logs and temporary files
-*.log
-*.tmp
-*.bak
-.DS_Store
-Thumbs.db
-
-# Do not accidentally commit game packages or proprietary data
+# Keep authorised/private game inputs and generated title output off GitHub
+private-input/
+game-output/
+local-game/
 *.rpf
 *.ttpf
 *.xvd
 *.xvc
 *.msixvc
 *.sav
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
