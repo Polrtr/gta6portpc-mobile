@@ -45,6 +45,7 @@ The aim is for HORIZON to sit between the target program and Windows: it should 
 
 - A portable C++20 command-line tool, `horizon-inspect`, for read-only PE metadata inspection.
 - Bounds-checked reporting of machine type, PE32/PE32+ magic, subsystem value and section count.
+- A read-only PE layout parser (`--layout`): optional-header fields, data directories, sections and imported DLL names. Nothing is mapped or executed.
 - A generic internal call dispatcher with service registration, request validation, payload limits and explicit unsupported-service errors.
 - Synthetic unit tests for the PE inspector and call dispatcher.
 - Windows GitHub Actions build and test workflow.
@@ -87,6 +88,7 @@ Run the read-only inspector:
 
 ```cmd
 build\Release\horizon-inspect.exe path\to\your\authorised-sample.exe
+build\Release\horizon-inspect.exe --layout path\to\your\authorised-sample.exe
 ```
 
 ## Project layout
@@ -94,7 +96,7 @@ build\Release\horizon-inspect.exe path\to\your\authorised-sample.exe
 | Path | Purpose |
 |---|---|
 | `include/horizon/` | Public interfaces for HORIZON modules |
-| `src/` | PE inspection and internal call dispatch |
+| `src/` | PE inspection, PE layout parsing and internal call dispatch |
 | `tests/` | Synthetic tests; no proprietary game data |
 | `docs/ARCHITECTURE.md` | Runtime layers and current boundaries |
 | `docs/GAME_INPUTS.md` | Required local inputs and file-handling rules |

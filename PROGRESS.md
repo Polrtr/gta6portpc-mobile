@@ -13,6 +13,7 @@
 - [x] Explicit errors for unsupported services and handler failures.
 - [x] Synthetic tests for the PE inspector and call dispatcher.
 - [x] Windows CI build and test workflow.
+- [x] Read-only PE layout parser: optional-header fields, data directories, section table, bounds-checked RVA translation and imported DLL names (`--layout` in `horizon-inspect`). 14 synthetic tests, including malformed-input cases.
 
 ## Critical game-input status
 
@@ -36,12 +37,17 @@ The call bridge is an internal routing primitive. It does not yet receive real X
 ## Next tasks
 
 1. [ ] Run and record CI for the call-bridge increment.
-2. [ ] Extend malformed-input coverage for the PE inspector.
+2. [ ] Extend malformed-input coverage for the base PE inspector and add fuzzing (layout parser has 14 synthetic tests; the base inspector still has 5).
 3. [ ] Specify a local-only input manifest with verified filenames, formats and required companions.
 4. [ ] Research official, publicly documented Xbox/Windows interfaces.
 5. [ ] Define the guest ABI boundary from authoritative documentation.
 6. [ ] Build a self-written synthetic application that exercises a HORIZON service end to end.
 7. [ ] Create an original D3D12 graphics sample and investigate a host backend.
+
+## Verification status of the PE layout increment
+
+- Built and tested on Linux (GCC 13.3, CMake): 3/3 CTest targets pass; the layout tests also pass under AddressSanitizer and UBSan.
+- Cross-compiled for Windows x64 with MinGW-w64 (no warnings), but **not executed** on Windows and **not built with MSVC**. Windows CI results for this branch are still to be recorded.
 
 ## Reporting rule
 

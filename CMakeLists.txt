@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(HorizonCompatibilityRuntime
-    VERSION 0.2.0
+    VERSION 0.3.0
     DESCRIPTION "Experimental Xbox-to-Windows compatibility research runtime"
     LANGUAGES CXX
 )
@@ -10,6 +10,7 @@ option(HORIZON_BUILD_TESTS "Build HORIZON synthetic tests" ON)
 
 add_library(horizon_core
     src/pe_inspector.cpp
+    src/pe_layout.cpp
     src/call_bridge.cpp
 )
 
@@ -41,4 +42,8 @@ if(HORIZON_BUILD_TESTS)
     add_executable(horizon-bridge-tests tests/call_bridge_tests.cpp)
     target_link_libraries(horizon-bridge-tests PRIVATE horizon_core)
     add_test(NAME horizon-call-bridge COMMAND horizon-bridge-tests)
+
+    add_executable(horizon-layout-tests tests/pe_layout_tests.cpp)
+    target_link_libraries(horizon-layout-tests PRIVATE horizon_core)
+    add_test(NAME horizon-pe-layout COMMAND horizon-layout-tests)
 endif()
