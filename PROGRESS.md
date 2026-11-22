@@ -1,6 +1,6 @@
 # HORIZON progress
 
-**Project stage:** Phase 1 — internal call-bridge foundation  
+**Project stage:** Phase 1 — PE metadata and internal call-bridge foundation  
 **Last updated:** 2026-11-22
 
 ## Verified implementation
@@ -13,7 +13,8 @@
 - [x] Explicit errors for unsupported services and handler failures.
 - [x] Synthetic tests for the PE inspector and call dispatcher.
 - [x] Windows CI build and test workflow.
-- [x] Read-only PE layout parser: optional-header fields, data directories, section table, bounds-checked RVA translation and imported DLL names (`--layout` in `horizon-inspect`). 14 synthetic tests, including malformed-input cases.
+- [x] Read-only PE layout parser: optional-header fields, data directories, section table, bounds-checked unique RVA translation and imported DLL names (`--layout` in `horizon-inspect`). Synthetic tests cover PE32/PE32+, import-directory bounds, file-offset semantics for the security directory, ambiguous mappings and section overlap.
+- [x] Call bridge bounds request/response payloads to 16 MiB and diagnostic text to 4 KiB.
 
 ## Critical game-input status
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-22 — PE and call-bridge hardening
+
+- Bounded import descriptor parsing by the declared import-directory size and rejected inconsistent RVA/size pairs.
+- Rejected ambiguous RVA-to-file mappings and reported raw section overlap with other sections and headers.
+- Distinguished the PE security/certificate directory's file offset from RVA-based directories.
+- Added 16 MiB response and 4 KiB diagnostic limits to the internal call bridge.
+- Added synthetic regression tests and updated the architecture/usage documentation.
+
 ## 2026-11-22 — PE layout parser (v0.3.0)
 
 - Added `horizon/pe_layout.hpp`: optional-header fields, data directories, section table, bounds-checked RVA→file-offset translation and imported DLL names.

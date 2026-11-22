@@ -84,6 +84,60 @@ bool test_oversized_payload_is_rejected() {
                  "oversized payload should be rejected before dispatch");
 }
 
+bool test_oversized_response_is_rejected() {
+    CallBridge bridge;
+    const auto service_id = static_cast<std::uint32_t>(ServiceId::Graphics);
+    const bool registered = bridge.register_handler(
+        service_id,
+        [](const CallRequest&) {
+            return CallResponse{
+                CallStatus::Success,
+                std::vector<std::uint8_t>(CallBridge::MaxResponseBytes + 1U, 0U),
+                "synthetic oversized response"
+            };
+        });
+    const auto response = bridge.dispatch(CallRequest{service_id, 1U, 1U, {}});
+    return check(registered, "response handler should register") &&
+        check(response.status == CallStatus::ResponseTooLarge,
+              "oversized handler response should be rejected") &&
+        check(response.payload.empty(), "oversized response payload must not be returned") &&
+        check(std::string(horizon::call_status_name(response.status)) == "response-too-large",
+              "response-too-large status should have a stable name");
+}
+
+bool test_response_detail_is_bounded() {
+    CallBridge bridge;
+    const auto service_id = static_cast<std::uint32_t>(ServiceId::Audio);
+    const bool registered = bridge.register_handler(
+        service_id,
+        [](const CallRequest&) {
+            return CallResponse{
+                CallStatus::Success, {},
+                std::string(CallBridge::MaxDetailBytes + 128U, 'D')
+            };
+        });
+    const auto response = bridge.dispatch(CallRequest{service_id, 1U, 1U, {}});
+    return check(registered, "detail handler should register") &&
+        check(response.status == CallStatus::Success, "bounded detail must not change status") &&
+        check(response.detail.size() == CallBridge::MaxDetailBytes,
+              "handler detail must be capped");
+}
+
+bool test_handler_exception_detail_is_bounded() {
+    CallBridge bridge;
+    const auto service_id = static_cast<std::uint32_t>(ServiceId::Storage);
+    const bool registered = bridge.register_handler(
+        service_id,
+        [](const CallRequest&) -> CallResponse {
+            throw std::runtime_error(std::string(CallBridge::MaxDetailBytes * 2U, 'E'));
+        });
+    const auto response = bridge.dispatch(CallRequest{service_id, 1U, 1U, {}});
+    return check(registered, "long-error handler should register") &&
+        check(response.status == CallStatus::HandlerError, "exception should remain a handler error") &&
+        check(response.detail.size() == CallBridge::MaxDetailBytes,
+              "exception diagnostics must be capped");
+}
+
 bool test_handler_exception_is_reported() {
     CallBridge bridge;
     const auto service_id = static_cast<std::uint32_t>(ServiceId::Storage);
@@ -115,6 +169,9 @@ int main() {
         {"invalid request rejection", test_invalid_request_is_rejected},
         {"duplicate registration rejection", test_duplicate_registration_is_rejected},
         {"oversized payload rejection", test_oversized_payload_is_rejected},
+        {"oversized response rejection", test_oversized_response_is_rejected},
+        {"response detail is bounded", test_response_detail_is_bounded},
+        {"handler exception detail is bounded", test_handler_exception_detail_is_bounded},
         {"handler exception reporting", test_handler_exception_is_reported}
     };
 

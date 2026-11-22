@@ -18,6 +18,7 @@ inline constexpr std::uint32_t kSectionMemWrite = 0x80000000U;
 
 // Index of the import table in the optional-header data directories.
 inline constexpr std::size_t kDirectoryImport = 1U;
+inline constexpr std::size_t kDirectorySecurity = 4U;
 inline constexpr std::size_t kMaxDataDirectories = 16U;
 
 struct PeSection {
@@ -30,7 +31,9 @@ struct PeSection {
 };
 
 struct PeDataDirectory {
-    std::uint32_t rva = 0;
+    // Most data directories store an RVA here. The security/certificate
+    // directory (index 4) is the PE-format exception and stores a file offset.
+    std::uint32_t address_or_offset = 0;
     std::uint32_t size = 0;
 };
 
@@ -45,8 +48,8 @@ struct PeLayout {
     std::vector<PeSection> sections;
     // Only the directories declared by the image (at most 16).
     std::vector<PeDataDirectory> data_directories;
-    // Non-fatal observations (for example, sections whose raw data lies
-    // outside the bytes that were supplied).
+    // Non-fatal observations (for example, out-of-file raw data, overlapping
+    // section ranges, or virtual ranges outside the RVA address space).
     std::vector<std::string> warnings;
 };
 
@@ -66,18 +69,18 @@ struct PeImportResult {
 // Read-only: the image is never mapped, relocated or executed.
 [[nodiscard]] PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image);
 
-// Translates an RVA range to a file offset using only bytes that are present
-// in `file_size`. Returns nullopt when the range is not fully backed by file
-// data (headers or a section's raw data), including on integer overflow.
+// Translates an RVA range to a unique file offset using only bytes present
+// in `file_size`. Returns nullopt for unmapped, truncated or ambiguous ranges,
+// and on integer overflow.
 [[nodiscard]] std::optional<std::size_t> rva_to_file_offset(
     const PeLayout& layout,
     std::uint32_t rva,
     std::size_t length,
     std::size_t file_size) noexcept;
 
-// Lists the DLL names referenced by the import directory. Names only: no
-// function names, thunks or binding data are read. Fails closed on any
-// out-of-range pointer, missing terminator or non-printable name.
+// Lists DLL names referenced by the import directory. Only names are read;
+// function names, thunks and binding data are not. The descriptor array is
+// bounded by its declared directory size. Malformed or ambiguous pointers fail closed.
 [[nodiscard]] PeImportResult list_import_dlls(
     std::span<const std::uint8_t> image,
     const PeLayout& layout);

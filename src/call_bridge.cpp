@@ -43,12 +43,29 @@ CallResponse CallBridge::dispatch(const CallRequest& request) const {
     }
 
     try {
-        return handler->second(request);
+        CallResponse response = handler->second(request);
+        if (response.payload.size() > MaxResponseBytes) {
+            return {
+                CallStatus::ResponseTooLarge,
+                {},
+                "Host service response exceeds the HORIZON call-bridge limit."
+            };
+        }
+        if (response.detail.size() > MaxDetailBytes) {
+            response.detail.resize(MaxDetailBytes);
+        }
+        return response;
     } catch (const std::exception& error) {
+        std::string detail = "Host service handler threw an exception: ";
+        const char* message = error.what();
+        while (message != nullptr && *message != '\0' && detail.size() < MaxDetailBytes) {
+            detail.push_back(*message);
+            ++message;
+        }
         return {
             CallStatus::HandlerError,
             {},
-            std::string("Host service handler threw an exception: ") + error.what()
+            std::move(detail)
         };
     } catch (...) {
         return {
@@ -67,6 +84,8 @@ const char* call_status_name(CallStatus status) noexcept {
         return "invalid-request";
     case CallStatus::PayloadTooLarge:
         return "payload-too-large";
+    case CallStatus::ResponseTooLarge:
+        return "response-too-large";
     case CallStatus::UnsupportedService:
         return "unsupported-service";
     case CallStatus::HandlerError:

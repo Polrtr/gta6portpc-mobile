@@ -50,13 +50,15 @@ Requests should be translated at explicit, documented boundaries. The host imple
 
 ## PE layout contract
 
-`read_pe_layout` builds on `inspect_pe` and adds image base, entry-point RVA, alignments, data directories and the section table. `rva_to_file_offset` translates an RVA range only when every byte is backed by header or section raw data in the supplied buffer; it never maps, zero-fills or relocates anything. `list_import_dlls` returns DLL names only (no function names or thunks), bounded to 4096 descriptors and 256-byte names, and fails closed on any out-of-range pointer, missing terminator or non-printable name.
+`read_pe_layout` builds on `inspect_pe` and adds image base, entry-point RVA, alignments, data directories and the section table. `rva_to_file_offset` returns a file offset only when every byte is present and exactly one header/section mapping matches; it rejects ambiguous ranges instead of depending on section-table order. The parser warns about overlapping virtual ranges, overlapping raw section ranges, section data overlapping headers, truncated raw data and virtual ranges outside the 32-bit RVA space. It never maps, zero-fills or relocates anything. `list_import_dlls` returns DLL names only (no function names or thunks), bounded to the declared import-directory size, 4096 descriptors and 256-byte names. It requires a complete null descriptor inside the declared directory and fails closed on inconsistent RVA/size pairs, out-of-range pointers, missing terminators or non-printable names.
 
 This module is a prerequisite for a future loader and for the Phase 2 interface inventory, but it is not a loader: nothing is mapped or executed. Imported DLL names are metadata and say nothing about whether the corresponding interfaces are implemented by HORIZON.
 
-## Call bridge contract
+## PE data-directory note
 
-The generic dispatcher uses HORIZON-owned service IDs. They are internal routing identifiers, not Xbox API ordinals, function numbers or ABI values. A handler is registered explicitly during initialisation. Unknown service IDs, invalid requests and oversized payloads fail with explicit statuses.
+The data-directory entry at index 4 is the PE security/certificate table and stores a file offset rather than an RVA; the inspector labels it separately. Other standard data-directory entries are displayed as RVAs. HORIZON currently reports the first 16 standard entries and emits a warning if an image declares more.
+
+The generic dispatcher uses HORIZON-owned service IDs. They are internal routing identifiers, not Xbox API ordinals, function numbers or ABI values. A handler is registered explicitly during initialisation. Unknown service IDs and invalid requests fail with explicit statuses. Request and response payloads are each capped at 16 MiB, and diagnostic text is capped at 4 KiB. These limits bound data returned across the bridge; handlers must still validate any internal allocations they perform.
 
 The dispatcher currently runs in-process and has no guest-code entry point. A later guest ABI adapter must validate and translate target structures before creating a HORIZON request. Exact calling conventions and data layouts must come from authoritative documentation and tests.
 

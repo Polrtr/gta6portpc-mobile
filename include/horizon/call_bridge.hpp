@@ -24,6 +24,7 @@ enum class CallStatus {
     Success,
     InvalidRequest,
     PayloadTooLarge,
+    ResponseTooLarge,
     UnsupportedService,
     HandlerError
 };
@@ -45,6 +46,8 @@ class CallBridge final {
 public:
     using Handler = std::function<CallResponse(const CallRequest&)>;
     static constexpr std::size_t MaxPayloadBytes = 16U * 1024U * 1024U;
+    static constexpr std::size_t MaxResponseBytes = 16U * 1024U * 1024U;
+    static constexpr std::size_t MaxDetailBytes = 4U * 1024U;
 
     // Register handlers during initialisation, before dispatch begins.
     [[nodiscard]] bool register_handler(std::uint32_t service_id, Handler handler);
