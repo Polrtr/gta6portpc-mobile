@@ -69,3 +69,19 @@ No game binaries, proprietary resource archives, or decrypted game content are i
 
 This is strong evidence that the currently enabled Leonida unit/integration tests pass on this Windows build. It still does **not** demonstrate that GTA VI itself launches or is compatible.
 
+
+
+## Latest local test run — 2026-11-22 (afternoon)
+
+This section supersedes the earlier 28-test result above for the newer local build/configuration.
+
+- Rebuilt the Release configuration successfully with CMake (`--build build --config Release --parallel 4`).
+- Ran CTest against the current build: 64 tests registered, 63 enabled, 1 disabled.
+- **Result: 61/63 enabled tests passed; 2 failed.**
+- Failure 1: `d3d12_vulkan_device` — D3D12_OPTIONS1 wave-lane capability mismatch. Vulkan reports a lane range of 8–32 while the native Intel D3D12 comparison reports 16–16; related capability fields also differ.
+- Failure 2: `d3d12_copy_xfmt` — several depth/color copy cases are rejected or mismatch, including D32_FLOAT ↔ R32_FLOAT and D16_UNORM ↔ R16_UNORM. One BC1/compressed `CopyTextureRegion` case also needs separate investigation.
+- Source investigation narrowed the depth/color copy rejection to validation paths in `runtime/src/vulkan_replay.h`, including aspect-mask checks in `prepare_texture_copy()` and `prepare_resource_copy()`. No fix has been applied yet.
+- A small test executable still passes the loader smoke test, but this is not a GTA VI launch test.
+
+**Current status:** the project builds, but the newest configured test run is not fully green. The two failures above remain open. GTA VI has not been launched; real-game compatibility is unverified.
+
