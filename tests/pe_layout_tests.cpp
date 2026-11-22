@@ -71,6 +71,8 @@ std::vector<std::uint8_t> make_pe(bool pe32_plus = true) {
     write_u32(b, count_off, 16U);
     write_u32(b, dirs_off + 8U, 0x2000U);             // import directory RVA
     write_u32(b, dirs_off + 12U, 0x3CU);              // 2 descriptors + null terminator
+    write_u32(b, dirs_off + 4U * 8U, 0x700U);         // security directory is a file offset
+    write_u32(b, dirs_off + 4U * 8U + 4U, 0x40U);
 
     const std::size_t sections = kOptional + (pe32_plus ? 0xF0U : 0xE0U);
     write_text(b, sections, ".text");
@@ -126,6 +128,18 @@ bool test_layout_fields_pe32_plus() {
         check(horizon::section_permissions(l.sections[0].characteristics) == "R-X", ".text is R-X") &&
         check(horizon::section_permissions(l.sections[1].characteristics) == "RW-", ".idata is RW-") &&
         check(l.warnings.empty(), "no warnings for a well-formed image");
+}
+
+bool test_security_directory_uses_file_offset_field() {
+    const auto bytes = make_pe();
+    const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
+    if (!check(result.ok, "security directory fixture should parse")) {
+        return false;
+    }
+    return check(result.layout.data_directories.size() > horizon::kDirectorySecurity,
+                 "security directory entry should be present") &&
+        check(result.layout.data_directories[horizon::kDirectorySecurity].address_or_offset == 0x700U,
+              "security directory value is preserved as a file offset");
 }
 
 bool test_layout_fields_pe32() {
@@ -336,6 +350,7 @@ int main() {
 
     const TestCase tests[] = {
         {"PE32+ layout fields", test_layout_fields_pe32_plus},
+        {"security directory file offset", test_security_directory_uses_file_offset_field},
         {"PE32 layout fields", test_layout_fields_pe32},
         {"RVA to file offset", test_rva_translation},
         {"import DLL names", test_import_dll_names},
