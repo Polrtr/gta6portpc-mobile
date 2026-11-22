@@ -56,10 +56,16 @@ CallResponse CallBridge::dispatch(const CallRequest& request) const {
         }
         return response;
     } catch (const std::exception& error) {
+        std::string detail = "Host service handler threw an exception: ";
+        const char* message = error.what();
+        while (message != nullptr && *message != '\0' && detail.size() < MaxDetailBytes) {
+            detail.push_back(*message);
+            ++message;
+        }
         return {
             CallStatus::HandlerError,
             {},
-            std::string("Host service handler threw an exception: ") + error.what()
+            std::move(detail)
         };
     } catch (...) {
         return {
