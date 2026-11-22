@@ -1,0 +1,31 @@
+name: Documentation or research proposal
+description: Suggest a useful guide, test note or improvement to this workbench.
+title: "[Proposal] "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve?
+      description: Explain what is unclear or missing for contributors.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the guide, test note or workflow you would add.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or references
+      description: Link to upstream documentation, a commit or a reproducible test.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Scope check
+      options:
+        - label: This proposal does not require distributing game files or bypassing access controls.
+          required: true

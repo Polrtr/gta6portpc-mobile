@@ -1,50 +1,63 @@
-# GTA6 Port PC — Experimental Workbench
+# GTA6 Port PC — Mobile / Research Workbench
 
-> **Unofficial, experimental project. Not affiliated with or endorsed by Rockstar Games or Take-Two Interactive.**
+> Unofficial research companion for experiments around **Leonida**, an independent Xbox Series-to-Windows compatibility project. This repository is not affiliated with Rockstar Games or Take-Two Interactive.
 
-This repository documents experiments, build notes and compatibility research around running the Xbox Series version of Grand Theft Auto VI on Windows.
+This repository is a place for our own progress logs, reproducible Windows test instructions, technical notes and contributor coordination. It is **not a standalone GTA VI port or a copy of the Leonida source code**.
 
-## Credits and upstream project
+## Start here
 
-The runtime and core research used in our experiments come from **[Leonida](https://github.com/ItsNotRexed/Leonida)**, created and maintained by **ItsNotRexed** and its contributors.
+| I want to… | Go to |
+|---|---|
+| Understand the project and its current limits | [Project status](#current-status) |
+| Set up the correct source repository | [Getting started](docs/GETTING_STARTED.md) |
+| Compile the Windows runtime | [Windows build guide](docs/BUILD_WINDOWS.md) |
+| Run and report tests | [Testing guide](docs/TESTING.md) |
+| Understand the code layout | [Architecture notes](docs/ARCHITECTURE.md) |
+| See what needs work next | [Roadmap](docs/ROADMAP.md) |
+| Help with documentation or research | [Contributing](CONTRIBUTING.md) |
 
-- Upstream project: https://github.com/ItsNotRexed/Leonida
-- Upstream license: [GNU General Public License v3.0](https://github.com/ItsNotRexed/Leonida/blob/main/LICENSE)
-- Consult the upstream repository for its full contributor credits, notices, build instructions and current status.
+## Important: there are two repositories
 
-**Leonida is the upstream project.** This repository is an independent collection of experiments and progress notes; it is not the official Leonida repository and should not be mistaken for an endorsed fork. All credit for Leonida's original code and engineering belongs to its original authors and contributors.
+- **This repository:** [Polrtr/gta6portpc-mobile](https://github.com/Polrtr/gta6portpc-mobile) — our documentation and experiment log.
+- **Upstream source:** [ItsNotRexed/Leonida](https://github.com/ItsNotRexed/Leonida) — the original runtime and implementation. Source-code work must respect its own license, contribution rules and project status.
 
-If code from Leonida is copied, modified or redistributed here in the future, its GPL-3.0 terms and applicable copyright notices must be preserved and followed. This README does not relicense upstream code.
+When following the build guide, clone the upstream Leonida repository. Cloning this documentation repository alone will not give you the runtime source files.
 
-## Current progress
+## Current status — 22 November 2026
 
-See [PROGRESS.md](PROGRESS.md) for the detailed test log.
+The latest local test record in this repository says:
 
-Verified locally so far:
+- The configured Windows x64 Release runtime build completed successfully.
+- CTest registered 64 tests: 63 enabled and 1 disabled.
+- **61 of the 63 enabled tests passed; 2 failed.**
+- The open failures are a D3D12/Vulkan wave-lane capability comparison and a group of texture-copy format cases.
+- A trivial test executable passed the loader smoke test.
 
-- Configured the runtime with Visual Studio 2022, MSVC x64 and Windows SDK 10.0.26100.0.
-- Built the Release target `gta6rt.exe` and `gta6rt_tls_host.dll`.
-- `gta6rt.exe --dry-run leonida_test.exe` mapped a minimal test executable with zero unimplemented imports.
-- `gta6rt.exe --run leonida_test.exe` initialised and ran the test program, which exited with code `0`.
+The previous 28/28 test result is kept in the history, but it is older and is superseded by the later 61/63 run. See [PROGRESS.md](PROGRESS.md) and [Testing](docs/TESTING.md).
 
-These are **smoke tests of a trivial test executable only**. They do not demonstrate that GTA VI boots or is playable.
+**GTA VI has not been launched by this workbench.** A passing loader smoke test or runtime unit test is not proof that the real game starts, renders correctly or is playable. The upstream Leonida README also describes the project as early and says the game does not boot yet. Always check the upstream status before drawing conclusions.
 
-## Current limitations
+## Scope
 
-- The real game executable declared by the inspected manifest (`game_scarlett_master.exe`) has not been located in the inspected folder.
-- No `.xvc` or `.msixvc` package was found in that folder.
-- The inspected `gameos.xvd` is a container, not a PE executable that can be passed directly to `gta6rt`.
-- Real-game loading, graphics, gameplay and compatibility have not been tested.
+The current recorded experiments target **Windows x64** and the Leonida runtime. Despite the word “mobile” in this repository's name, Android and iOS builds are not implemented or claimed.
 
-## Legal and safety notes
+This project focuses on:
+1. Reproducible runtime builds and tests.
+2. Understanding loader, API-shim and graphics compatibility gaps.
+3. Recording failures with enough detail for another developer to reproduce them.
+4. Keeping legal, safe and clearly attributed research notes.
 
-- This repository does not provide GTA VI, game executables, keys, proprietary game assets or decrypted game data.
-- Use only game files you are legally authorised to access. Do not upload game files, extracted assets, keys, saves or generated proprietary data to this repository.
-- Do not attempt to bypass encryption or access controls.
-- Grand Theft Auto and related trademarks belong to their respective owners. This is an independent technical research project.
+## Legal and safety
 
-## Contributing
+- This repository does not distribute GTA VI, game executables, proprietary assets, keys or decrypted game data.
+- Only use files you are legally authorised to access.
+- Do not bypass encryption, DRM or access controls.
+- Never commit game archives, executable files, extracted assets, shaders, keys, saves or private logs containing game data.
+- Leonida's original code and credits belong to its upstream authors. Any reuse or redistribution must follow the upstream license and notices.
 
-When reporting a test, include the exact command, toolchain versions and relevant error output. Do not attach copyrighted game content, secrets, keys or generated game assets.
+## Project links
 
-For Leonida source changes and upstream development, contribute directly to [ItsNotRexed/Leonida](https://github.com/ItsNotRexed/Leonida) and follow its contribution guidance.
+- [Leonida upstream source](https://github.com/ItsNotRexed/Leonida)
+- [Upstream contribution guide](https://github.com/ItsNotRexed/Leonida/blob/main/CONTRIBUTING.md)
+- [Our progress log](PROGRESS.md)
+- [Report a documentation or reproducibility issue](https://github.com/Polrtr/gta6portpc-mobile/issues/new/choose)

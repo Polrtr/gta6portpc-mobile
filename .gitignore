@@ -1,0 +1,35 @@
+# Local build output and IDE files
+build/
+build-*/
+.vs/
+.idea/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.pdb
+*.ilk
+*.obj
+*.lib
+*.dll
+*.exe
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Do not accidentally commit game packages or proprietary data
+*.rpf
+*.ttpf
+*.xvd
+*.xvc
+*.msixvc
+*.sav
