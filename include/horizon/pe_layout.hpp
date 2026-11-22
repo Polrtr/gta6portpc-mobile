@@ -71,7 +71,7 @@ struct PeImportResult {
 
 // Translates an RVA range to a unique file offset using only bytes present
 // in `file_size`. Returns nullopt for unmapped, truncated or ambiguous ranges,
- // and on integer overflow.
+// and on integer overflow.
 [[nodiscard]] std::optional<std::size_t> rva_to_file_offset(
     const PeLayout& layout,
     std::uint32_t rva,
