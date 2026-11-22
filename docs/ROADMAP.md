@@ -7,8 +7,8 @@ This roadmap tracks the workbench's research priorities. It is not an upstream L
 - [x] Record the local Windows x64 Release build process.
 - [x] Document the CTest command and latest result.
 - [x] Separate the documentation repository from the upstream source repository.
-- [ ] Record the exact upstream source SHA for every future test run.
-- [ ] Add a concise environment block to each new progress entry.
+- [x] Define a mandatory source-SHA capture process for every future test run (historical 2026-11-22 run has no recoverable SHA; documented explicitly).
+- [x] Add an environment block to the latest progress entry and a reusable test-run template for future entries.
 
 ## Phase 2 — Resolve the two recorded test failures
 
