@@ -38,3 +38,15 @@ This roadmap tracks the workbench's research priorities. It is not an upstream L
 - Bypassing encryption, DRM or access controls.
 - Claiming Android/iOS support; the recorded work is Windows x64.
 - Presenting a unit-test pass as proof of real-game compatibility.
+
+## Phase 5 — Upstream feature gaps
+
+The detailed, date-stamped list is maintained in [UPSTREAM_GAPS.md](UPSTREAM_GAPS.md). These are upstream-reported gaps, not features already implemented in this workbench.
+
+- [ ] Verify upstream HEAD and identify whether buffer views, root signatures, PSOs, draw commands, placed resources, 1D textures and the game's presentation path remain open.
+- [ ] Design focused synthetic tests before attempting D3D12/Vulkan implementation work.
+- [ ] Investigate the remaining VS/PS/GS wave64 cross-half operations on 32-wide subgroups.
+- [ ] Investigate the unverified vertex-shader input-layout assumption.
+- [ ] Finish model-layout coverage and BCPack-to-rpf9dump integration only after checking upstream status.
+- [ ] Record exact source commits and hardware/driver details for every result.
+- [ ] Submit useful, narrowly scoped fixes upstream when verified.
