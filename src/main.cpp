@@ -129,8 +129,10 @@ int main(int argc, char** argv) {
         const horizon::PeImportResult imports = horizon::list_import_dlls(image, layout);
         std::cout << "\nImported DLLs:\n";
         if (!imports.ok) {
-            std::cout << "  (unavailable: " << imports.error << ")\n";
-        } else if (imports.dll_names.empty()) {
+            std::cerr << "Import directory parsing failed: " << imports.error << '\n';
+            return 5;
+        }
+        if (imports.dll_names.empty()) {
             std::cout << "  (none declared)\n";
         } else {
             for (const auto& dll : imports.dll_names) {
