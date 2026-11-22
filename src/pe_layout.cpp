@@ -168,21 +168,41 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
         layout.sections.push_back(std::move(section));
     }
 
-    // Overlapping virtual ranges make RVA translation ambiguous; report them.
-    for (std::size_t a = 0; a < layout.sections.size(); ++a) {
-        for (std::size_t b = a + 1U; b < layout.sections.size(); ++b) {
-            const auto& first = layout.sections[a];
-            const auto& second = layout.sections[b];
-            const std::uint64_t first_end =
-                static_cast<std::uint64_t>(first.virtual_address) + first.virtual_size;
-            const std::uint64_t second_end =
-                static_cast<std::uint64_t>(second.virtual_address) + second.virtual_size;
-            if (first.virtual_size != 0U && second.virtual_size != 0U &&
-                first.virtual_address < second_end && second.virtual_address < first_end) {
-                layout.warnings.push_back(
-                    "Sections '" + first.name + "' and '" + second.name +
-                    "' have overlapping virtual ranges.");
+    // Detect virtual-range overlap in O(n log n), avoiding a quadratic walk
+    // over the (16-bit) section count in an untrusted image.
+    struct VirtualRange {
+        std::uint64_t begin;
+        std::uint64_t end;
+        const PeSection* section;
+    };
+    std::vector<VirtualRange> ranges;
+    ranges.reserve(layout.sections.size());
+    for (const PeSection& section : layout.sections) {
+        if (section.virtual_size != 0U) {
+            ranges.push_back({
+                section.virtual_address,
+                static_cast<std::uint64_t>(section.virtual_address) + section.virtual_size,
+                &section
+            });
+        }
+    }
+    std::sort(ranges.begin(), ranges.end(),
+        [](const VirtualRange& left, const VirtualRange& right) {
+            if (left.begin != right.begin) {
+                return left.begin < right.begin;
             }
+            return left.end < right.end;
+        });
+
+    const VirtualRange* furthest = nullptr;
+    for (const VirtualRange& current : ranges) {
+        if (furthest != nullptr && current.begin < furthest->end) {
+            layout.warnings.push_back(
+                "Section '" + current.section->name + "' overlaps the virtual range of section '" +
+                furthest->section->name + "'.");
+        }
+        if (furthest == nullptr || current.end > furthest->end) {
+            furthest = &current;
         }
     }
 
@@ -197,7 +217,13 @@ std::optional<std::size_t> rva_to_file_offset(
     std::uint32_t rva,
     std::size_t length,
     std::size_t file_size) noexcept {
-    const std::uint64_t rva_end = static_cast<std::uint64_t>(rva) + length;
+    constexpr std::uint64_t kRvaAddressSpaceSize = 0x1'0000'0000ULL;
+    const std::uint64_t range_length = static_cast<std::uint64_t>(length);
+    if (static_cast<std::size_t>(range_length) != length ||
+        range_length > kRvaAddressSpaceSize - static_cast<std::uint64_t>(rva)) {
+        return std::nullopt;
+    }
+    const std::uint64_t rva_end = static_cast<std::uint64_t>(rva) + range_length;
 
     // Header region: mapped 1:1 from the start of the file.
     if (rva_end <= layout.size_of_headers && rva_end <= file_size) {
@@ -234,8 +260,23 @@ PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLay
         return result;  // Image declares no import directory.
     }
     const PeDataDirectory directory = layout.data_directories[kDirectoryImport];
-    if (directory.rva == 0U || directory.size == 0U) {
+    const bool has_directory_rva = directory.rva != 0U;
+    const bool has_directory_size = directory.size != 0U;
+    if (!has_directory_rva && !has_directory_size) {
         return result;
+    }
+    if (has_directory_rva != has_directory_size) {
+        return import_failure("Import directory must declare both a non-zero RVA and size.");
+    }
+
+    constexpr std::uint64_t kRvaAddressSpaceSize = 0x1'0000'0000ULL;
+    const std::uint64_t directory_end =
+        static_cast<std::uint64_t>(directory.rva) + directory.size;
+    if (directory_end > kRvaAddressSpaceSize) {
+        return import_failure("Import directory RVA range overflows.");
+    }
+    if (directory.size < kImportDescriptorSize) {
+        return import_failure("Import directory is too small to contain a terminating descriptor.");
     }
 
     for (std::size_t index = 0;; ++index) {
@@ -243,8 +284,15 @@ PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLay
             return import_failure("Import directory exceeds the descriptor limit.");
         }
 
+        const std::uint64_t descriptor_relative =
+            static_cast<std::uint64_t>(index) * kImportDescriptorSize;
+        if (descriptor_relative > directory.size ||
+            kImportDescriptorSize > static_cast<std::uint64_t>(directory.size) - descriptor_relative) {
+            return import_failure("Import directory has no complete terminating descriptor within its declared size.");
+        }
+
         const std::uint64_t descriptor_rva =
-            static_cast<std::uint64_t>(directory.rva) + (index * kImportDescriptorSize);
+            static_cast<std::uint64_t>(directory.rva) + descriptor_relative;
         if (descriptor_rva > std::numeric_limits<std::uint32_t>::max()) {
             return import_failure("Import descriptor RVA overflows.");
         }
