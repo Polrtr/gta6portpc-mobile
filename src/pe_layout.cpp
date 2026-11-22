@@ -131,7 +131,7 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
     }
 
     if (directory_count > kMaxDataDirectories) {
-        layout.warnings.push(
+        layout.warnings.push_back(
             "Image declares more data directories than HORIZON currently reports; extra entries are ignored.");
     }
     const std::size_t stored_directories =
