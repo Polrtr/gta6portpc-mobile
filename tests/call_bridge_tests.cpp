@@ -123,6 +123,21 @@ bool test_response_detail_is_bounded() {
               "handler detail must be capped");
 }
 
+bool test_handler_exception_detail_is_bounded() {
+    CallBridge bridge;
+    const auto service_id = static_cast<std::uint32_t>(ServiceId::Storage);
+    const bool registered = bridge.register_handler(
+        service_id,
+        [](const CallRequest&) -> CallResponse {
+            throw std::runtime_error(std::string(CallBridge::MaxDetailBytes * 2U, 'E'));
+        });
+    const auto response = bridge.dispatch(CallRequest{service_id, 1U, 1U, {}});
+    return check(registered, "long-error handler should register") &&
+        check(response.status == CallStatus::HandlerError, "exception should remain a handler error") &&
+        check(response.detail.size() == CallBridge::MaxDetailBytes,
+              "exception diagnostics must be capped");
+}
+
 bool test_handler_exception_is_reported() {
     CallBridge bridge;
     const auto service_id = static_cast<std::uint32_t>(ServiceId::Storage);
@@ -156,6 +171,7 @@ int main() {
         {"oversized payload rejection", test_oversized_payload_is_rejected},
         {"oversized response rejection", test_oversized_response_is_rejected},
         {"response detail is bounded", test_response_detail_is_bounded},
+        {"handler exception detail is bounded", test_handler_exception_detail_is_bounded},
         {"handler exception reporting", test_handler_exception_is_reported}
     };
 
