@@ -120,7 +120,7 @@ bool test_layout_fields_pe32_plus() {
         check(l.section_alignment == 0x1000U && l.file_alignment == 0x200U, "alignments") &&
         check(l.size_of_image == 0x3000U && l.size_of_headers == 0x400U, "image/header sizes") &&
         check(l.data_directories.size() == 16U, "16 data directories") &&
-        check(l.data_directories[1].rva == 0x2000U, "import directory RVA") &&
+        check(l.data_directories[1].address_or_offset == 0x2000U, "import directory RVA") &&
         check(l.sections.size() == 2U, "two sections") &&
         check(l.sections[0].name == ".text" && l.sections[1].name == ".idata", "section names") &&
         check(horizon::section_permissions(l.sections[0].characteristics) == "R-X", ".text is R-X") &&
@@ -133,7 +133,7 @@ bool test_layout_fields_pe32() {
     const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
     return check(result.ok, "valid PE32 layout should parse: " + result.error) &&
         check(result.layout.image_base == 0x00400000ULL, "PE32 image base") &&
-        check(result.layout.data_directories[1].rva == 0x2000U, "PE32 import directory RVA");
+        check(result.layout.data_directories[1].address_or_offset == 0x2000U, "PE32 import directory RVA");
 }
 
 bool test_rva_translation() {
