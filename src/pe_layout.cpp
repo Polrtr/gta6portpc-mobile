@@ -130,6 +130,10 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
         return layout_failure("Declared data-directory count does not fit in the optional header.");
     }
 
+    if (directory_count > kMaxDataDirectories) {
+        layout.warnings.push(
+            "Image declares more data directories than HORIZON currently reports; extra entries are ignored.");
+    }
     const std::size_t stored_directories =
         std::min<std::size_t>(directory_count, kMaxDataDirectories);
     for (std::size_t i = 0; i < stored_directories; ++i) {
@@ -184,10 +188,13 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
     std::vector<VirtualRange> ranges;
     ranges.reserve(layout.sections.size());
     for (const PeSection& section : layout.sections) {
-        if (section.virtual_size != 0U) {
+        const std::uint32_t virtual_extent = section.virtual_size == 0U
+            ? section.raw_size
+            : section.virtual_size;
+        if (virtual_extent != 0U) {
             ranges.push_back({
                 section.virtual_address,
-                static_cast<std::uint64_t>(section.virtual_address) + section.virtual_size,
+                static_cast<std::uint64_t>(section.virtual_address) + virtual_extent,
                 &section
             });
         }
