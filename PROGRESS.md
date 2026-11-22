@@ -76,3 +76,15 @@ The initial exploratory XVD metadata values have not been independently validate
 **GTA VI has not been launched.** The real game's executable has not been located or loaded by this workbench. Graphics, gameplay and real-game compatibility remain unverified. The upstream Leonida project README should be checked for its latest official status.
 
 No game binaries, proprietary resource archives, keys or decrypted game content are included in this repository.
+
+### Reproducibility metadata for the latest recorded run
+
+- Upstream source commit SHA: **not captured for this historical run**. Do not infer or substitute the current upstream HEAD; the exact revision used locally cannot be reconstructed from the available log.
+- OS: Windows 11 x64.
+- CPU: Intel Core 3 N355 (recorded workstation/laptop context).
+- GPU: Intel integrated graphics; exact device identifier and driver version were not captured in this test entry.
+- Toolchain: Visual Studio 2022, MSVC 19.44, Windows SDK 10.0.26100.0.
+- CMake: 4.4.4.
+- Build: Release, x64; SDL3 disabled; Vulkan headers unavailable in this configuration.
+- Test commands: the CMake build and CTest commands shown above.
+- Future runs must capture the upstream SHA and complete hardware/driver/toolchain block before results are recorded. Use [the test-run template](docs/TEST_RUN_TEMPLATE.md).
