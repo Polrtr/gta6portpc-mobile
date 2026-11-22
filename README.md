@@ -45,7 +45,8 @@ The aim is for HORIZON to sit between the target program and Windows: it should 
 
 - A portable C++20 command-line tool, `horizon-inspect`, for read-only PE metadata inspection.
 - Bounds-checked reporting of machine type, PE32/PE32+ magic, subsystem value and section count.
-- A read-only PE layout parser (`--layout`): optional-header fields, data directories, sections and imported DLL names. Nothing is mapped or executed.
+- A read-only PE layout parser (`--layout`): optional-header fields, data directories, sections and imported DLL names. It distinguishes the certificate table's file offset from RVA-based directories, rejects ambiguous RVA mappings and reports suspicious section overlap. Nothing is mapped or executed.
+- A bounded internal call dispatcher with request/response payload limits and capped diagnostic text.
 - A generic internal call dispatcher with service registration, request validation, payload limits and explicit unsupported-service errors.
 - Synthetic unit tests for the PE inspector and call dispatcher.
 - Windows GitHub Actions build and test workflow.
