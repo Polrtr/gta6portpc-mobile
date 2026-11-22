@@ -187,6 +187,30 @@ bool test_no_import_directory_is_empty_success() {
     return check(imports.ok && imports.dll_names.empty(), "absent import directory is not an error");
 }
 
+bool test_extra_data_directories_are_reported_as_unsupported() {
+    auto bytes = make_pe();
+    bytes.insert(bytes.begin() + static_cast<std::ptrdiff_t>(kSections), 8U, 0U);
+    write_u16(bytes, kFileHeader + 16U, 0x00F8U);
+    write_u32(bytes, kOptional + 108U, 17U);
+    const std::size_t shifted_sections = kSections + 8U;
+    write_u32(bytes, shifted_sections + 20U, 0x408U);
+    write_u32(bytes, shifted_sections + 40U + 20U, 0x608U);
+    const auto result = horizon::read_pe_layout(std::span<const std::uint8_t>(bytes));
+    if (!check(result.ok, "image with an extra directory entry should remain inspectable")) {
+        return false;
+    }
+    if (!check(result.layout.data_directories.size() == horizon::kMaxDataDirectories,
+               "parser should expose its supported standard directory set")) {
+        return false;
+    }
+    for (const std::string& warning : result.layout.warnings) {
+        if (warning.find("more data directories than HORIZON currently reports") != std::string::npos) {
+            return true;
+        }
+    }
+    return check(false, "unsupported extra data directories must be reported");
+}
+
 bool test_rejects_directory_count_overflow() {
     auto bytes = make_pe();
     write_u32(bytes, kOptional + 108U, 17U);  // 17 entries cannot fit in 0xF0 bytes
@@ -357,6 +381,7 @@ int main() {
         {"import directory size is enforced", test_import_directory_size_is_enforced},
         {"import directory RVA/size pair", test_import_directory_rva_size_pair_is_validated},
         {"absent import directory", test_no_import_directory_is_empty_success},
+        {"extra data directories are reported", test_extra_data_directories_are_reported_as_unsupported},
         {"data-directory count overflow", test_rejects_directory_count_overflow},
         {"optional header too small", test_rejects_small_optional_header},
         {"truncated section table", test_rejects_truncated_section_table},
