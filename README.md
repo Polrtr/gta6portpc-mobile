@@ -14,6 +14,7 @@ This repository is a place for our own progress logs, reproducible Windows test 
 | Run and report tests | [Testing guide](docs/TESTING.md) |
 | Understand the code layout | [Architecture notes](docs/ARCHITECTURE.md) |
 | See what needs work next | [Roadmap](docs/ROADMAP.md) |
+| See what Leonida still lacks | [Upstream gap analysis](docs/UPSTREAM_GAPS.md) |
 | Help with documentation or research | [Contributing](CONTRIBUTING.md) |
 
 ## Important: there are two repositories
