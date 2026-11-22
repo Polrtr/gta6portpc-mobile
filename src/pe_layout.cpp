@@ -135,7 +135,7 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
     for (std::size_t i = 0; i < stored_directories; ++i) {
         PeDataDirectory directory;
         const std::size_t entry = optional_header + fixed_size + (i * 8U);
-        if (!read_u32(image, entry, directory.rva) ||
+        if (!read_u32(image, entry, directory.address_or_offset) ||
             !read_u32(image, entry + 4U, directory.size)) {
             return layout_failure("Data-directory table is truncated.");
         }
@@ -319,7 +319,7 @@ PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLay
         return result;  // Image declares no import directory.
     }
     const PeDataDirectory directory = layout.data_directories[kDirectoryImport];
-    const bool has_directory_rva = directory.rva != 0U;
+    const bool has_directory_rva = directory.address_or_offset != 0U;
     const bool has_directory_size = directory.size != 0U;
     if (!has_directory_rva && !has_directory_size) {
         return result;
@@ -330,7 +330,7 @@ PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLay
 
     constexpr std::uint64_t kRvaAddressSpaceSize = 0x1'0000'0000ULL;
     const std::uint64_t directory_end =
-        static_cast<std::uint64_t>(directory.rva) + directory.size;
+        static_cast<std::uint64_t>(directory.address_or_offset) + directory.size;
     if (directory_end > kRvaAddressSpaceSize) {
         return import_failure("Import directory RVA range overflows.");
     }
@@ -351,7 +351,7 @@ PeImportResult list_import_dlls(std::span<const std::uint8_t> image, const PeLay
         }
 
         const std::uint64_t descriptor_rva =
-            static_cast<std::uint64_t>(directory.rva) + descriptor_relative;
+            static_cast<std::uint64_t>(directory.address_or_offset) + descriptor_relative;
         if (descriptor_rva > std::numeric_limits<std::uint32_t>::max()) {
             return import_failure("Import descriptor RVA overflows.");
         }
