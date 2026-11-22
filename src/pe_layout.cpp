@@ -169,9 +169,12 @@ PeLayoutResult read_pe_layout(std::span<const std::uint8_t> image) {
             layout.warnings.push_back(
                 "Section '" + section.name + "' raw data extends beyond the supplied bytes.");
         }
+        const std::uint32_t virtual_extent = section.virtual_size == 0U
+            ? section.raw_size
+            : section.virtual_size;
         const std::uint64_t virtual_end =
-            static_cast<std::uint64_t>(section.virtual_address) + section.virtual_size;
-        if (section.virtual_size != 0U && virtual_end > 0x1'0000'0000ULL) {
+            static_cast<std::uint64_t>(section.virtual_address) + virtual_extent;
+        if (virtual_extent != 0U && virtual_end > 0x1'0000'0000ULL) {
             layout.warnings.push_back(
                 "Section '" + section.name + "' virtual range exceeds the 32-bit RVA address space.");
         }
