@@ -50,7 +50,7 @@ Requests should be translated at explicit, documented boundaries. The host imple
 
 ## PE layout contract
 
-`read_pe_layout` builds on `inspect_pe` and adds image base, entry-point RVA, alignments, data directories and the section table. `rva_to_file_offset` translates an RVA range only when every byte is backed by header or section raw data in the supplied buffer; it never maps, zero-fills or relocates anything. `list_import_dlls` returns DLL names only (no function names or thunks), bounded to 4096 descriptors and 256-byte names, and fails closed on any out-of-range pointer, missing terminator or non-printable name.
+`read_pe_layout` builds on `inspect_pe` and adds image base, entry-point RVA, alignments, data directories and the section table. `rva_to_file_offset` translates an RVA range only when every byte is backed by header or section raw data in the supplied buffer; it never maps, zero-fills or relocates anything. `list_import_dlls` returns DLL names only (no function names or thunks), bounded to the declared import-directory size, 4096 descriptors and 256-byte names. It requires a complete null descriptor inside the declared directory and fails closed on inconsistent RVA/size pairs, out-of-range pointers, missing terminators or non-printable names.
 
 This module is a prerequisite for a future loader and for the Phase 2 interface inventory, but it is not a loader: nothing is mapped or executed. Imported DLL names are metadata and say nothing about whether the corresponding interfaces are implemented by HORIZON.
 
