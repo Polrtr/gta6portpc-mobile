@@ -70,7 +70,7 @@ std::vector<std::uint8_t> make_pe(bool pe32_plus = true) {
     const std::size_t dirs_off = kOptional + (pe32_plus ? 112U : 96U);
     write_u32(b, count_off, 16U);
     write_u32(b, dirs_off + 8U, 0x2000U);             // import directory RVA
-    write_u32(b, dirs_off + 12U, 0x28U);              // import directory size
+    write_u32(b, dirs_off + 12U, 0x3CU);              // 2 descriptors + null terminator
 
     const std::size_t sections = kOptional + (pe32_plus ? 0xF0U : 0xE0U);
     write_text(b, sections, ".text");
@@ -147,6 +147,8 @@ bool test_rva_translation() {
         check(!horizon::rva_to_file_offset(layout, 0x11FEU, 4U, size), "range crossing section end is rejected") &&
         check(!horizon::rva_to_file_offset(layout, 0x5000U, 1U, size), "unmapped RVA is rejected") &&
         check(!horizon::rva_to_file_offset(layout, 0xFFFFFFFFU, 16U, size), "RVA arithmetic cannot wrap") &&
+        check(!horizon::rva_to_file_offset(layout, 0x1010U, static_cast<std::size_t>(-1), size),
+              "very large RVA ranges are rejected without arithmetic wraparound") &&
         check(!horizon::rva_to_file_offset(layout, 0x2000U, 1U, 0x601U - 1U), "file shorter than raw data is rejected");
 }
 
@@ -192,6 +194,36 @@ bool test_rejects_truncated_section_table() {
     return check(!result.ok, "truncated section table must fail");
 }
 
+bool test_import_directory_size_is_enforced() {
+    auto bytes = make_pe();
+    // Only the first non-null descriptor is inside this declared size. The
+    // second descriptor and the null terminator are physically present later,
+    // but must not be read as part of the import directory.
+    write_u32(bytes, kOptional + 112U + 12U, 0x14U);
+    const std::span<const std::uint8_t> view(bytes);
+    const auto layout = horizon::read_pe_layout(view).layout;
+    const auto imports = horizon::list_import_dlls(view, layout);
+    return check(!imports.ok, "parser must not read descriptors beyond directory.size");
+}
+
+bool test_import_directory_rva_size_pair_is_validated() {
+    auto bytes = make_pe();
+    write_u32(bytes, kOptional + 112U + 8U, 0U);
+    const std::span<const std::uint8_t> view(bytes);
+    const auto layout = horizon::read_pe_layout(view).layout;
+    if (!check(!horizon::list_import_dlls(view, layout).ok,
+               "non-zero import size with zero RVA must fail")) {
+        return false;
+    }
+
+    auto second = make_pe();
+    write_u32(second, kOptional + 112U + 12U, 0U);
+    const std::span<const std::uint8_t> second_view(second);
+    const auto second_layout = horizon::read_pe_layout(second_view).layout;
+    return check(!horizon::list_import_dlls(second_view, second_layout).ok,
+                 "non-zero import RVA with zero size must fail");
+}
+
 bool test_import_name_without_terminator() {
     auto bytes = make_pe();
     for (std::size_t i = 0; i < 0x100U; ++i) {
@@ -220,6 +252,7 @@ bool test_import_name_non_printable() {
 
 bool test_import_table_without_terminator() {
     auto bytes = make_pe();
+    write_u32(bytes, kOptional + 112U + 12U, 0x200U); // Entire declared .idata raw area.
     // Fill the whole .idata raw area with non-zero descriptors pointing at a valid name.
     for (std::size_t d = 0; d + 20U <= 0x200U; d += 20U) {
         write_u32(bytes, kIdataRaw + d + 12U, 0x2100U);
@@ -264,6 +297,8 @@ int main() {
         {"PE32 layout fields", test_layout_fields_pe32},
         {"RVA to file offset", test_rva_translation},
         {"import DLL names", test_import_dll_names},
+        {"import directory size is enforced", test_import_directory_size_is_enforced},
+        {"import directory RVA/size pair", test_import_directory_rva_size_pair_is_validated},
         {"absent import directory", test_no_import_directory_is_empty_success},
         {"data-directory count overflow", test_rejects_directory_count_overflow},
         {"optional header too small", test_rejects_small_optional_header},
