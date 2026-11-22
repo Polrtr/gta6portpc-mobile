@@ -56,6 +56,8 @@ This module is a prerequisite for a future loader and for the Phase 2 interface 
 
 ## Call bridge contract
 
+The data-directory entry at index 4 is the PE security/certificate table and stores a file offset rather than an RVA; the inspector labels it separately. Other standard data-directory entries are displayed as RVAs.
+
 The generic dispatcher uses HORIZON-owned service IDs. They are internal routing identifiers, not Xbox API ordinals, function numbers or ABI values. A handler is registered explicitly during initialisation. Unknown service IDs, invalid requests and oversized payloads fail with explicit statuses.
 
 The dispatcher currently runs in-process and has no guest-code entry point. A later guest ABI adapter must validate and translate target structures before creating a HORIZON request. Exact calling conventions and data layouts must come from authoritative documentation and tests.
