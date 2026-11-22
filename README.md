@@ -1,64 +1,82 @@
-# GTA6 Port PC — Mobile / Research Workbench
+# Project HORIZON
 
-> Unofficial research companion for experiments around **Leonida**, an independent Xbox Series-to-Windows compatibility project. This repository is not affiliated with Rockstar Games or Take-Two Interactive.
+**An experimental Xbox-to-Windows compatibility runtime**
 
-This repository is a place for our own progress logs, reproducible Windows test instructions, technical notes and contributor coordination. It is **not a standalone GTA VI port or a copy of the Leonida source code**.
+HORIZON is an independent research project exploring the engineering needed to run authorised Xbox-targeted software in a Windows host environment. The long-term research areas are executable metadata, documented platform interfaces, host-service compatibility and graphics API adaptation.
 
-## Start here
+> **Current status: bootstrap.** HORIZON currently contains a read-only PE metadata inspector and synthetic tests. It is not an Xbox emulator, does not load Xbox games, does not translate D3D12 commands and has not launched GTA VI.
 
-| I want to… | Go to |
+This project is not affiliated with Microsoft, Xbox, Rockstar Games or Take-Two Interactive.
+
+## What exists today
+
+- A portable C++20 command-line tool, `horizon-inspect`.
+- Bounds-checked inspection of standard PE headers.
+- Reports machine type, PE32/PE32+ magic, subsystem value and section count.
+- Recognises the documented PE Xbox subsystem marker (value 14), without treating that marker as proof that a binary is runnable.
+- Synthetic unit tests and Windows CI.
+
+## What does not exist yet
+
+- Xbox package/container support.
+- A package decryptor, signature bypass or security circumvention.
+- Xbox system-call or GDK compatibility.
+- A Windows loader for Xbox-targeted executables.
+- D3D12-to-Vulkan translation.
+- Audio, input, storage, networking or other console-service translation.
+- GTA VI support, boot, rendering or gameplay.
+
+A metadata match is only a clue. It does not make a console executable compatible with Windows.
+
+## Build on Windows
+
+Requirements: Windows 10/11 x64, Visual Studio 2022 with the Desktop development with C++ workload, and CMake 3.20 or newer.
+
+Open **Command Prompt** in the repository directory:
+
+```cmd
+cmake -S . -B build
+cmake --build build --config Release --parallel 4
+ctest --test-dir build -C Release --output-on-failure
+```
+
+Run the read-only inspector:
+
+```cmd
+build\Release\horizon-inspect.exe path\to\your\authorised-sample.exe
+```
+
+For a single-configuration generator, the executable may instead be at `build/horizon-inspect.exe`.
+
+## Project layout
+
+| Path | Purpose |
 |---|---|
-| Understand the project and its current limits | [Project status](#current-status) |
-| Set up the correct source repository | [Getting started](docs/GETTING_STARTED.md) |
-| Compile the Windows runtime | [Windows build guide](docs/BUILD_WINDOWS.md) |
-| Run and report tests | [Testing guide](docs/TESTING.md) |
-| Understand the code layout | [Architecture notes](docs/ARCHITECTURE.md) |
-| See what needs work next | [Roadmap](docs/ROADMAP.md) |
-| See what Leonida still lacks | [Upstream gap analysis](docs/UPSTREAM_GAPS.md) |
-| Help with documentation or research | [Contributing](CONTRIBUTING.md) |
+| `include/horizon/` | Public interfaces for HORIZON modules |
+| `src/` | Current implementation; presently the PE metadata inspector |
+| `tests/` | Synthetic tests; no proprietary game data |
+| `docs/ARCHITECTURE.md` | Proposed runtime architecture and current boundaries |
+| `docs/ROADMAP.md` | Phased implementation plan |
+| `docs/PLATFORM_SCOPE.md` | Xbox/Windows research scope and terminology |
+| `.github/workflows/ci.yml` | Automated build and test checks |
 
-## Important: there are two repositories
+Future directories such as `platform/`, `loader/`, `graphics/` and `services/` will be added only when a real, testable module exists.
 
-- **This repository:** [Polrtr/gta6portpc-mobile](https://github.com/Polrtr/gta6portpc-mobile) — our documentation and experiment log.
-- **Upstream source:** [ItsNotRexed/Leonida](https://github.com/ItsNotRexed/Leonida) — the original runtime and implementation. Source-code work must respect its own license, contribution rules and project status.
+## Development principles
 
-When following the build guide, clone the upstream Leonida repository. Cloning this documentation repository alone will not give you the runtime source files.
+1. Implement one small, independently testable component at a time.
+2. Prefer official documentation and synthetic test cases.
+3. Treat unknown platform behaviour as unknown; do not guess ABI, vtable layouts or calling conventions.
+4. Keep executable inspection read-only until a lawful, documented runtime path exists.
+5. Record the exact commit, toolchain, host and test output for each result.
+6. Never present a parser test as proof that a game boots or runs.
 
-## Current status — 22 November 2026
+## Legal and data-handling boundaries
 
-The latest local test record in this repository says:
+- Use only software and files you are legally authorised to examine.
+- Do not bypass encryption, DRM, signature checks, licensing, account checks or access controls.
+- Do not commit or distribute game executables, packages, keys, decrypted files, proprietary assets, extracted textures/models/audio/video, or generated data derived from those assets.
+- Keep private test files outside this repository. Publish only synthetic fixtures and safe, minimal diagnostic results.
+- Respect the licences and notices of all third-party dependencies.
 
-- The configured Windows x64 Release runtime build completed successfully.
-- CTest registered 64 tests: 63 enabled and 1 disabled.
-- **61 of the 63 enabled tests passed; 2 failed.**
-- The open failures are a D3D12/Vulkan wave-lane capability comparison and a group of texture-copy format cases.
-- A trivial test executable passed the loader smoke test.
-
-The previous 28/28 test result is kept in the history, but it is older and is superseded by the later 61/63 run. See [PROGRESS.md](PROGRESS.md) and [Testing](docs/TESTING.md).
-
-**GTA VI has not been launched by this workbench.** A passing loader smoke test or runtime unit test is not proof that the real game starts, renders correctly or is playable. The upstream Leonida README also describes the project as early and says the game does not boot yet. Always check the upstream status before drawing conclusions.
-
-## Scope
-
-The current recorded experiments target **Windows x64** and the Leonida runtime. Despite the word “mobile” in this repository's name, Android and iOS builds are not implemented or claimed.
-
-This project focuses on:
-1. Reproducible runtime builds and tests.
-2. Understanding loader, API-shim and graphics compatibility gaps.
-3. Recording failures with enough detail for another developer to reproduce them.
-4. Keeping legal, safe and clearly attributed research notes.
-
-## Legal and safety
-
-- This repository does not distribute GTA VI, game executables, proprietary assets, keys or decrypted game data.
-- Only use files you are legally authorised to access.
-- Do not bypass encryption, DRM or access controls.
-- Never commit game archives, executable files, extracted assets, shaders, keys, saves or private logs containing game data.
-- Leonida's original code and credits belong to its upstream authors. Any reuse or redistribution must follow the upstream license and notices.
-
-## Project links
-
-- [Leonida upstream source](https://github.com/ItsNotRexed/Leonida)
-- [Upstream contribution guide](https://github.com/ItsNotRexed/Leonida/blob/main/CONTRIBUTING.md)
-- [Our progress log](PROGRESS.md)
-- [Report a documentation or reproducibility issue](https://github.com/Polrtr/gta6portpc-mobile/issues/new/choose)
+See [Safety and scope](docs/SAFETY.md), [Getting started](docs/GETTING_STARTED.md), [Architecture](docs/ARCHITECTURE.md) and [Roadmap](docs/ROADMAP.md).

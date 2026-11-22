@@ -1,46 +1,41 @@
-# Test run record template
+# HORIZON test-run template
 
-Copy this block into `PROGRESS.md` for every new local test run. Do not leave the source revision implicit.
+Copy this template into a test report. Fill in only facts that were actually observed.
 
-## Test run — YYYY-MM-DD
+## Run — YYYY-MM-DD
 
 ### Source
-- Upstream repository: https://github.com/ItsNotRexed/Leonida
-- Upstream commit SHA: `paste output of git rev-parse HEAD`
-- Working tree changes: clean / list modified files
-- Local workbench commit (if applicable): `paste commit SHA`
+- Repository:
+- Commit SHA (`git rev-parse HEAD`):
+- Working tree status:
 
 ### Environment
-- OS and version:
+- OS/version:
+- Architecture:
 - CPU:
-- GPU:
-- GPU driver:
-- Visual Studio / MSVC:
-- Windows SDK:
-- CMake:
-- Vulkan SDK / runtime:
-- Build configuration and options:
+- GPU/driver (if graphics tests are involved):
+- Compiler/version:
+- CMake/version:
+- Generator:
 
 ### Commands
-```powershell
-git -C .\Leonida rev-parse HEAD
-git -C .\Leonida status --short
-cmake --build .\Leonida\build --config Release --parallel 4
-ctest --test-dir .\Leonida\build -C Release --output-on-failure
+```cmd
+cmake -S . -B build
+cmake --build build --config Release --parallel 4
+ctest --test-dir build -C Release --output-on-failure
 ```
 
-Adjust paths to the actual checkout and build directory. Record the exact commands actually used; do not imply that the example commands were run if they were not.
+Replace the examples with the exact commands actually used.
 
 ### Results
-- Tests registered:
-- Enabled:
-- Passed:
-- Failed:
-- Disabled:
-- Failed test names and concise error:
-- Loader smoke test:
-- Real-game milestone reached: not tested / loader / graphics init / first frame / gameplay
-- Logs or evidence (safe text only; never attach game files, keys, proprietary assets or extracted content):
+- Configure: pass/fail/not run
+- Build: pass/fail/not run
+- Tests passed:
+- Tests failed:
+- Failure details:
+- Inspector sample type: synthetic / authorised public sample / not run
+- Any limitations:
 
 ### Interpretation
-Separate confirmed observations from hypotheses. A passing unit test or trivial loader smoke test is not evidence that the actual game boots or is playable.
+
+Separate confirmed observations from hypotheses. Parser tests do not demonstrate that Xbox software runs on Windows, and no result should be described as GTA VI boot or gameplay unless that has been lawfully and reproducibly demonstrated.

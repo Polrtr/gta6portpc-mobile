@@ -1,18 +1,19 @@
-## What changed?
+## Summary
 
-Describe the documentation or reproducibility improvement.
+What HORIZON component does this change affect?
 
-## Why is it useful?
+## Evidence
 
-Who can follow this, and what problem does it solve?
+- Public specification / documentation:
+- Synthetic test added or updated:
+- Exact build and test commands:
+- Observed result:
 
-## Verification
+## Review checklist
 
-- [ ] I checked Markdown links and formatting.
-- [ ] I included exact commands and versions for any new test result.
-- [ ] I did not present a smoke test as proof that GTA VI boots.
-- [ ] I did not add game files, keys, proprietary assets or extracted data.
-
-## Related issue
-
-Closes #
+- [ ] The change is narrowly scoped and documented.
+- [ ] Tests cover expected behaviour and malformed input.
+- [ ] No guessed ABI or undocumented structure is introduced.
+- [ ] No commercial game files, keys or proprietary assets are included.
+- [ ] No encryption, DRM, signature, licensing or access-control bypass is added.
+- [ ] Compatibility claims match the evidence.

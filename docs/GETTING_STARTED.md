@@ -1,60 +1,45 @@
 # Getting started
 
-This page explains how to reproduce the runtime work recorded in this repository.
+This repository contains the HORIZON prototype itself. The initial milestone is a read-only PE metadata inspector.
 
-## 1. Know which repository to clone
+## Requirements
 
-This repository, `Polrtr/gta6portpc-mobile`, contains documentation and progress notes. It does not contain the Leonida runtime source.
+- Windows 10/11 x64 or a recent Linux development environment.
+- CMake 3.20 or newer.
+- A C++20 compiler (Visual Studio 2022/MSVC, Clang or GCC).
+- Git.
 
-For the actual source code, use the upstream project:
+## Clone
 
 ```cmd
-git clone --recursive https://github.com/ItsNotRexed/Leonida.git
-cd Leonida
-git submodule update --init --recursive
+git clone https://github.com/Polrtr/gta6portpc-mobile.git
+cd gta6portpc-mobile
 ```
 
-Keep the upstream checkout separate from this documentation repository. Do not copy proprietary game files into either Git repository.
-
-## 2. Install the Windows build tools
-
-For the runtime build documented here, prepare:
-
-- Windows 10 or 11, 64-bit.
-- Visual Studio 2022 with the **Desktop development with C++** workload.
-- Windows SDK **10.0.26100 or newer**.
-- CMake **3.24 or newer**.
-- Git, including submodule support.
-
-The Windows SDK requirement is checked by the upstream runtime CMake project. If CMake reports that D3D12 root-signature 1.2 is unavailable, install the required SDK in Visual Studio Installer and configure into a fresh build directory.
-
-## 3. Build and test the runtime
-
-From the root of the upstream Leonida checkout, follow [Building on Windows](BUILD_WINDOWS.md).
-
-The short version is:
+The current transition is being developed on the `horizon/bootstrap` branch. Switch to it to test this version:
 
 ```cmd
-cmake -S runtime -B build -G "Visual Studio 17 2022" -A x64
+git switch horizon/bootstrap
+```
+
+## Configure, build and test
+
+```cmd
+cmake -S . -B build
 cmake --build build --config Release --parallel 4
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-The test command may report failures. That does not necessarily mean the compiler build failed; inspect the names and failure output separately.
+With Visual Studio's multi-configuration generator, the executable is normally `build\Release\horizon-inspect.exe`.
 
-## 4. Understand what the result means
+## Inspect an authorised PE sample
 
-A successful CMake build means the configured targets compiled. Passing CTest cases mean those particular tests passed in that environment. A trivial PE loader smoke test only checks a limited loader path.
+```cmd
+build\Release\horizon-inspect.exe path\to\sample.exe
+```
 
-None of these results proves that GTA VI boots or is playable. At the time of the latest record in this repository, the test suite had two known failures and real-game launch had not been verified.
+The tool reads at most the first 1 MiB and reports basic PE metadata. It does not run, modify, unpack or decrypt the input.
 
-## 5. Before sharing a result
+## What to do next
 
-Include:
-- Leonida source commit or version.
-- Windows version, Visual Studio/MSVC version, CMake version and Windows SDK.
-- GPU model and driver version, when graphics tests are involved.
-- The exact command and complete relevant failure output.
-- Whether the result is from a clean build or an existing build directory.
-
-Never attach game archives, executable files, keys, extracted assets, shaders or saves. See [Testing](TESTING.md) and [Contributing](../CONTRIBUTING.md).
+Read [Architecture](ARCHITECTURE.md), [Platform scope](PLATFORM_SCOPE.md), [Safety](SAFETY.md) and [Roadmap](ROADMAP.md). Do not use a game package as a test fixture. Use the synthetic fixtures already in `tests/`.

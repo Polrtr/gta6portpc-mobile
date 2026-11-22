@@ -1,52 +1,55 @@
-# Roadmap
+# HORIZON roadmap
 
-This roadmap tracks the workbench's research priorities. It is not an upstream Leonida schedule, and it does not promise that GTA VI will become playable.
+This roadmap describes our own implementation. Percentages are not used: a milestone is complete only when code, tests and documentation support it.
 
-## Phase 1 — Reproducible baseline
+## Phase 0 — Project foundation
 
-- [x] Record the local Windows x64 Release build process.
-- [x] Document the CTest command and latest result.
-- [x] Separate the documentation repository from the upstream source repository.
-- [x] Define a mandatory source-SHA capture process for every future test run (historical 2026-11-22 run has no recoverable SHA; documented explicitly).
-- [x] Add an environment block to the latest progress entry and a reusable test-run template for future entries.
+- [x] Create an independent repository branch and project identity.
+- [x] Add CMake and a C++20 build.
+- [x] Add read-only PE metadata inspection.
+- [x] Add synthetic tests and CI configuration.
+- [ ] Verify the first Windows and Linux CI runs.
 
-## Phase 2 — Resolve the two recorded test failures
+## Phase 1 — Format recognition
 
-- [ ] Investigate the D3D12_OPTIONS1 wave-lane capability mismatch in `d3d12_vulkan_device`.
-- [ ] Add focused coverage for wave-lane capability reporting.
-- [ ] Investigate D32_FLOAT/R32_FLOAT and D16_UNORM/R16_UNORM copy behavior in `d3d12_copy_xfmt`.
-- [ ] Investigate the BC1 CopyTextureRegion case independently.
-- [ ] Re-run the full enabled suite after each fix and publish the exact before/after results.
+- [ ] Expand PE metadata coverage using the official PE/COFF specification.
+- [ ] Add robust malformed-input and boundary tests.
+- [ ] Document which public package metadata formats can be identified without unpacking protected content.
+- [ ] Keep unknown or protected package data opaque; no decryption or access-control bypass.
 
-## Phase 3 — Improve graphics test coverage
+## Phase 2 — Compatibility contracts
 
-- [ ] Add minimal synthetic tests for each supported copy/resolve path.
-- [ ] Test across more than one GPU vendor where hardware is available.
-- [ ] Record driver versions and distinguish hardware failures from validation/test setup errors.
-- [ ] Keep unsupported operations explicitly documented rather than silently treating them as successful.
+- [ ] Build a documented inventory of public Xbox-facing interfaces relevant to application lifecycle, timing, file access and input.
+- [ ] Record version, calling convention, structure layout and source for every interface.
+- [ ] Define host-side interfaces before implementing shims.
+- [ ] Add self-written test programs for each contract.
+- [ ] Mark unsupported calls explicitly.
 
-## Phase 4 — End-to-end compatibility research
+## Phase 3 — Minimal runtime services
 
-- [ ] Follow upstream implementation and status updates.
-- [ ] Only test with files the tester is legally authorised to access.
-- [ ] Record whether a test reaches loader startup, graphics initialisation, first frame or actual gameplay; these are different milestones.
-- [ ] Never claim that the game boots or is playable without a reproducible real-game test.
+- [ ] Add a test-only host runtime with explicit startup/shutdown.
+- [ ] Implement only documented, testable service behaviour.
+- [ ] Add deterministic tests for handles, errors, clocks and input.
+- [ ] Keep host resource access sandboxed and opt-in.
 
-## Out of scope for now
+## Phase 4 — Graphics research
 
-- Distributing the game, game files, keys or proprietary assets.
-- Bypassing encryption, DRM or access controls.
-- Claiming Android/iOS support; the recorded work is Windows x64.
-- Presenting a unit-test pass as proof of real-game compatibility.
+- [ ] Build a small original D3D12 sample that draws a triangle on Windows.
+- [ ] Document the graphics semantics required by the sample.
+- [ ] Prototype a separate backend adapter using public APIs and synthetic resources.
+- [ ] Add image/output comparisons and GPU/driver metadata.
+- [ ] Do not claim Xbox D3D12 equivalence from a Windows-only sample.
 
-## Phase 5 — Upstream feature gaps
+## Phase 5 — End-to-end research
 
-The detailed, date-stamped list is maintained in [UPSTREAM_GAPS.md](UPSTREAM_GAPS.md). These are upstream-reported gaps, not features already implemented in this workbench.
+- [ ] Demonstrate a complete path using HORIZON's own synthetic application.
+- [ ] Publish reproducible build, test and first-frame evidence.
+- [ ] Review legal authorisation, platform requirements and technical feasibility before any third-party title is considered.
+- [ ] Keep actual title compatibility unclaimed until independently verified.
 
-- [ ] Verify upstream HEAD and identify whether buffer views, root signatures, PSOs, draw commands, placed resources, 1D textures and the game's presentation path remain open.
-- [ ] Design focused synthetic tests before attempting D3D12/Vulkan implementation work.
-- [ ] Investigate the remaining VS/PS/GS wave64 cross-half operations on 32-wide subgroups.
-- [ ] Investigate the unverified vertex-shader input-layout assumption.
-- [ ] Finish model-layout coverage and BCPack-to-rpf9dump integration only after checking upstream status.
-- [ ] Record exact source commits and hardware/driver details for every result.
-- [ ] Submit useful, narrowly scoped fixes upstream when verified.
+## Explicit non-goals
+
+- Distributing commercial games or game files.
+- Defeating encryption, DRM, signatures, activation, licensing or platform security.
+- Extracting or publishing proprietary game assets.
+- Claiming that HORIZON is a complete console emulator or that it can run GTA VI.

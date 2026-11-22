@@ -1,79 +1,46 @@
-# Building the Windows runtime
-
-These instructions build the **Leonida runtime and its tests**, not a ready-to-play copy of GTA VI.
+# Build HORIZON on Windows
 
 ## Requirements
 
 - Windows 10/11 x64.
-- Visual Studio 2022 with **Desktop development with C++**.
-- Windows SDK 10.0.26100 or newer.
-- CMake 3.24 or newer.
-- Git; clone the upstream repository recursively so its submodules are present.
+- Visual Studio 2022 with the **Desktop development with C++** workload.
+- Windows SDK installed through Visual Studio Installer.
+- CMake 3.20 or newer.
 
-The upstream runtime uses C++20 and stops configuration if the build is not 64-bit or the required D3D12 root-signature 1.2 declarations are missing.
+## Build from Command Prompt
 
-## 1. Clone upstream
-
-Open a terminal:
+Open CMD in the repository root:
 
 ```cmd
-git clone --recursive https://github.com/ItsNotRexed/Leonida.git
-cd Leonida
-git submodule update --init --recursive
-```
-
-## 2. Configure for Visual Studio 2022 x64
-
-From the Leonida repository root:
-
-```cmd
-cmake -S runtime -B build -G "Visual Studio 17 2022" -A x64
-```
-
-If you already have a build folder configured with another generator or SDK, use a new folder name (for example `build-vs2022`) rather than mixing configurations.
-
-## 3. Compile Release
-
-```cmd
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Release --parallel 4
-```
-
-The recorded local build produced `gta6rt.exe` and `gta6rt_tls_host.dll` under the Release output directory. Exact outputs depend on the source revision and enabled optional dependencies.
-
-## 4. Run the test suite
-
-```cmd
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-CTest returns a non-zero exit code when tests fail. Read the names and failure messages; do not treat a successful compile as a passing test suite.
+If you already configured `build` with a different generator, choose a fresh directory such as `build-vs2022`. Do not mix generators in one CMake build directory.
 
-## 5. Common configuration problems
-
-### CMake is not found
-
-Install CMake 3.24+ and ensure it is available in your terminal PATH, or call the full path to cmake.exe.
-
-### Wrong architecture
-
-The runtime requires x64. Configure using the Visual Studio generator with `-A x64`.
-
-### Windows SDK is too old
-
-Install Windows SDK 10.0.26100 or newer through Visual Studio Installer. Then delete the **build directory only** and run the configure command again. Do not delete your source checkout.
-
-### Submodule or third-party files are missing
-
-From the repository root, run:
+## Run the inspector
 
 ```cmd
-git submodule update --init --recursive
+build\Release\horizon-inspect.exe path\to\sample.exe
 ```
 
-### Build passes, but tests fail
+The current inspector is read-only and does not execute the inspected file.
 
-Build and test are separate checks. Record the exact failing test and output, then follow [Testing](TESTING.md). The failures currently tracked by this workbench are documented there.
+## Common issues
 
-## Important
+### CMake is not recognised
 
-These steps do not build or provide the game, game assets, keys or a complete playable port. Use only files you are legally authorised to access and never bypass encryption or access controls.
+Install CMake and ensure its `bin` directory is on PATH, or call cmake.exe with its full path.
+
+### No C++ compiler is found
+
+Open Visual Studio Installer and add **Desktop development with C++** and a Windows SDK.
+
+### Tests fail
+
+Keep the complete CTest output. A compilation success and a test success are different results. Report the exact commit, generator and compiler version when opening an issue.
+
+## Scope reminder
+
+This build produces the HORIZON inspector and synthetic tests. It does not produce an Xbox emulator, a GTA VI executable or a playable PC port.

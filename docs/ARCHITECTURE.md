@@ -1,38 +1,65 @@
-# Architecture notes
+# HORIZON architecture
 
-These notes describe the upstream Leonida checkout. Paths below are relative to the root of **ItsNotRexed/Leonida**, not this documentation-only repository.
+HORIZON is intended to grow into a compatibility runtime. The current code is deliberately much smaller: a read-only PE metadata inspector.
 
-## Main areas
+## Current data flow
 
-| Path | Responsibility |
-|---|---|
-| `runtime/src/` | Runtime entry point, PE loading and lower-level runtime support. |
-| `runtime/shims/` | Host-side implementations and compatibility shims for APIs expected by the target environment. |
-| `runtime/test/` | Runtime-focused test programs and fixtures. |
-| `runtime/CMakeLists.txt` | CMake project for the Windows runtime and its tests. |
-| `third_party/` | Third-party dependencies used by the upstream project. |
-| `tools/`, `scripts/` | Supporting tools and build/test helpers. |
-| `make_game.py`, `game/` | Upstream game-package checking and build pipeline components; not part of this repository's documentation files. |
-| `docs/` | Upstream technical notes for individual systems. |
+```text
+authorised sample file
+        |
+        v
+horizon-inspect
+        |
+        v
+bounded header read
+        |
+        v
+PE / COFF metadata parser
+        |
+        v
+human-readable report
+```
 
-## Runtime flow (high level)
+No image is mapped into memory as an executable, no imports are resolved, and no target code runs.
 
-1. The command-line program selects a mode and validates its arguments.
-2. The PE loader maps a Windows executable image and resolves imports.
-3. Compatibility shims provide selected host implementations for APIs the program expects.
-4. The graphics path translates or forwards graphics work through the runtime's graphics backend.
-5. Tests exercise individual components using synthetic programs and fixtures where possible.
+## Planned runtime layers
 
-This is a conceptual map, not a promise that every API or graphics operation is implemented.
+| Layer | Responsibility | Status |
+|---|---|---|
+| File identification | Identify documented file/header formats | Initial PE header support only |
+| Package boundary | Recognise authorised package metadata | Not implemented |
+| Executable loader | Memory layout, relocations, imports and lifecycle | Not implemented |
+| Platform services | Documented Xbox-facing OS/GDK contracts with host equivalents | Not implemented |
+| Graphics | D3D12 semantics and a host graphics backend | Not implemented |
+| Other services | Input, audio, storage, networking, timing and synchronisation | Not implemented |
+| Test harness | Synthetic test programs and repeatable result capture | Parser tests only |
 
-## Files involved in the currently tracked investigations
+## Design rules
 
-- `runtime/src/vulkan_replay.h`: investigated validation and preparation paths for texture/resource copies, including `prepare_texture_copy()` and `prepare_resource_copy()`.
-- `runtime/shims/d3d12_vulkan_device.cpp`: D3D12/Vulkan device and format mapping code inspected during the copy-format investigation.
-- `runtime/test/`: location of runtime test sources, including the format-copy and Vulkan-device test work discussed in the progress log.
+- Keep format parsing separate from execution.
+- Validate every offset and length before reading.
+- Use explicit types for platform identifiers and status values.
+- Do not infer API behaviour from names alone.
+- Add a synthetic test before adding a compatibility implementation.
+- Fail closed on unknown formats or unsupported operations.
+- Keep host OS integration behind narrow interfaces.
+- Record the exact specification/SDK version for every platform contract.
 
-The two unresolved issues are described in [Testing](TESTING.md). No patch is claimed to have fixed them.
+## PE subsystem note
 
-## Source attribution
+Microsoft's PE/COFF documentation defines `IMAGE_SUBSYSTEM_XBOX` as value 14. HORIZON reports that field when it appears in a valid PE header. It is only a metadata signal; it does not identify a specific console generation, validate a package, or establish that Windows can execute the image.
 
-Leonida's runtime and original architecture belong to the upstream authors and contributors. This page is an independently written navigation aid; it does not replace upstream documentation or contribution rules.
+Reference: [Microsoft PE format — Windows subsystems](https://learn.microsoft.com/windows/win32/debug/pe-format).
+
+## Future module boundaries
+
+As real code is added, the intended separation is:
+
+- `include/horizon/`: public module contracts.
+- `src/format/`: file-format inspection.
+- `src/loader/`: executable image loading, only after a lawful and documented design exists.
+- `src/platform/`: host services and platform compatibility interfaces.
+- `src/graphics/`: graphics command/state translation.
+- `tests/`: synthetic fixtures and unit tests.
+
+These are design targets, not current capabilities.

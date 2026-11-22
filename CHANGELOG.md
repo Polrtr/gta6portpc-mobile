@@ -1,11 +1,11 @@
 # Changelog
 
-Notable changes to this documentation and experiment log.
+## 2026-11-22 — HORIZON bootstrap
 
-## 2026-11-22
+- Reframed the repository from a Leonida documentation workbench into the independent Project HORIZON prototype.
+- Preserved the previous workbench history on the `main` branch; this transition is isolated in `horizon/bootstrap`.
+- Added a C++20, read-only PE metadata inspector.
+- Added synthetic parser tests and cross-platform CI.
+- Replaced the previous roadmap and architecture notes with HORIZON-specific scope, milestones and safety boundaries.
 
-- Added a getting-started guide that distinguishes this workbench from the original Leonida source repository.
-- Added Windows runtime build, testing, architecture and roadmap documentation.
-- Added contributor guidance and GitHub issue/pull-request templates.
-- Updated the front page and progress summary to show the latest recorded result: 61/63 enabled tests passing, with two unresolved failures.
-- Preserved the earlier 28/28 test result as historical context rather than presenting it as the latest status.
+This is an initial scaffold, not a working Xbox compatibility layer.
