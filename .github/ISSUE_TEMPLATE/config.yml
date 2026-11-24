@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Upstream Leonida source and code issues
-    url: https://github.com/ItsNotRexed/Leonida
-    about: Runtime source-code development belongs in the original upstream repository.
-  - name: Upstream contribution instructions
-    url: https://github.com/ItsNotRexed/Leonida/blob/main/CONTRIBUTING.md
-    about: Read the upstream rules before proposing runtime code changes.
